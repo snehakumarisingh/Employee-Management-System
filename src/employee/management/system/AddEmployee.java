@@ -162,38 +162,125 @@ public class AddEmployee extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == add){
-            String name = tname.getText();
-            String fname = tfname.getText();
-            String dob = ((JTextField) tdob.getDateEditor().getUiComponent()).getText();
-            String salary = tsalary.getText();
-            String address = taddress.getText();
-            String aadhar = taadhar.getText();
-            String phone = tphone.getText();
-            String email = temail.getText();
-            String education = (String) Boxeducation.getSelectedItem();
-            String designation = tdesignation.getText();
-            String empID = tempid.getText();
+    
+@Override
+public void actionPerformed(ActionEvent e) {
 
-            try{
-                conn c = new conn();
-                String query = "insert into employee values('"+name+"', '"+fname+"', '"+dob+"', '"+salary+"','"+address+"', '"+phone+"', '"+email+"', '"+education+"', '"+designation+"','"+aadhar+"', '"+empID+"')";
-                c.statement.executeUpdate(query);
-                JOptionPane.showMessageDialog(null,"Details added successfully");
-                setVisible(false);
-                new Main_class();
+    if (e.getSource() == add) {
 
-            }catch (Exception E){
-                E.printStackTrace();
+        String name = tname.getText().trim();
+        String fname = tfname.getText().trim();
+        String salary = tsalary.getText().trim();
+        String address = taddress.getText().trim();
+        String phone = tphone.getText().trim();
+        String aadhar = taadhar.getText().trim();
+        String email = temail.getText().trim();
+        String education = (String) Boxeducation.getSelectedItem();
+        String designation = tdesignation.getText().trim();
+        String empID = tempid.getText();
+
+        // 1. Check empty fields
+        if (name.isEmpty() || fname.isEmpty() ||
+            salary.isEmpty() || address.isEmpty() ||
+            phone.isEmpty() || aadhar.isEmpty() ||
+            email.isEmpty() || designation.isEmpty()) {
+
+            JOptionPane.showMessageDialog(this,
+                    "Please fill all fields.");
+            return;
+        }
+
+        // 2. Check date of birth
+        if (tdob.getDate() == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select date of birth.");
+            return;
+        }
+
+        // 3. Validate salary
+        try {
+            double amount = Double.parseDouble(salary);
+
+            if (!Double.isFinite(amount) || amount <= 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Salary must be a positive number.");
+                return;
             }
 
-        }else {
-            setVisible(false);
-            new Main_class();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter a valid salary.");
+            return;
         }
+
+        // 4. Validate phone number
+        if (!phone.matches("[0-9]{10}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Phone number must contain 10 digits.");
+            return;
+        }
+
+        // 5. Validate Aadhaar number
+        if (!aadhar.matches("[0-9]{12}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Aadhaar number must contain 12 digits.");
+            return;
+        }
+
+        // 6. Validate email
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter a valid email address.");
+            return;
+        }
+
+        // 7. Save employee details
+        String dob = ((JTextField) tdob
+                .getDateEditor().getUiComponent()).getText();
+
+        String query = "INSERT INTO employee VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            conn c = new conn();
+
+            try (java.sql.PreparedStatement ps =
+                    c.statement.getConnection().prepareStatement(query)) {
+
+                ps.setString(1, name);
+                ps.setString(2, fname);
+                ps.setString(3, dob);
+                ps.setDouble(4, Double.parseDouble(salary));
+                ps.setString(5, address);
+                ps.setString(6, phone);
+                ps.setString(7, email);
+                ps.setString(8, education);
+                ps.setString(9, designation);
+                ps.setString(10, aadhar);
+                ps.setString(11, empID);
+
+                ps.executeUpdate();
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Employee added successfully!");
+
+            dispose();
+            new Main_class();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            JOptionPane.showMessageDialog(this,
+                    "Could not add employee. Please check the details and database.");
+        }
+
+    } else if (e.getSource() == back) {
+        dispose();
+        new Main_class();
     }
+}
+
 
     public static void main(String[] args) {
         new AddEmployee();
