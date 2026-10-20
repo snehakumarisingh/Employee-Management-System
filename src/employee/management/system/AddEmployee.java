@@ -190,6 +190,20 @@ public void actionPerformed(ActionEvent e) {
             return;
         }
 
+        // Validate employee name
+        if (!name.matches("[a-zA-Z ]+")) {
+            JOptionPane.showMessageDialog(this,
+                "Name should contain only letters and spaces.");
+            return;
+    }
+
+        // Validate father's name
+        if (!fname.matches("[a-zA-Z ]+")) {
+            JOptionPane.showMessageDialog(this,
+                "Father's name should contain only letters and spaces.");
+            return;
+    }
+
         // 2. Check date of birth
         if (tdob.getDate() == null) {
             JOptionPane.showMessageDialog(this,
@@ -268,12 +282,23 @@ public void actionPerformed(ActionEvent e) {
             dispose();
             new Main_class();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (java.sql.SQLException ex) {
+    ex.printStackTrace();
 
-            JOptionPane.showMessageDialog(this,
-                    "Could not add employee. Please check the details and database.");
-        }
+    if (ex.getErrorCode() == 1062) {
+        JOptionPane.showMessageDialog(this,
+                "Employee ID already exists. Please try again.");
+    } else {
+        JOptionPane.showMessageDialog(this,
+                "Database error. Could not add employee.");
+    }
+
+} catch (Exception ex) {
+    ex.printStackTrace();
+
+    JOptionPane.showMessageDialog(this,
+            "Could not add employee. Please check the details.");
+}
 
     } else if (e.getSource() == back) {
         dispose();
